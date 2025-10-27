@@ -7,7 +7,6 @@
 
 
 import LocalAuthentication
-import SwiftUI
 
 class BiometricAuth {
     
@@ -29,7 +28,8 @@ class BiometricAuth {
                     if success {
                         completion(true, nil)
                     } else {
-                        completion(false, authError?.localizedDescription)
+                        let message = self.errorMessage(for: authError)
+                        completion(false, message)
                     }
                 }
             }
@@ -52,12 +52,34 @@ class BiometricAuth {
                     if success {
                         completion(true, nil)
                     } else {
-                        completion(false, authError?.localizedDescription)
+                        let message = self.errorMessage(for: authError)
+                        completion(false, message)
                     }
                 }
             }
         } else {
             completion(false, "Biometric(Face ID or Touch ID) authentication not available on this device")
+        }
+    }
+    
+    private func errorMessage(for error: Error?) -> String {
+        guard let laError = error as? LAError else { return "Unknown error" }
+        
+        switch laError.code {
+        case .authenticationFailed:
+            return "Authentication failed. Try again."
+        case .userCancel:
+            return "Authentication was canceled by the user."
+        case .userFallback:
+            return "User chose to use a fallback method."
+        case .biometryNotAvailable:
+            return "Biometric authentication is not available on this device."
+        case .biometryNotEnrolled:
+            return "No Face ID or Touch ID enrolled."
+        case .biometryLockout:
+            return "Too many failed attempts. Try using your passcode."
+        default:
+            return "Authentication error: \(laError.localizedDescription)"
         }
     }
 }
